@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>慢查询分析 | Kymlin's Blog</title><meta name="keywords" content="mysql"><meta name="author" content="Kymlin,kymlin00@gmail.com"><meta name="copyright" content="Kymlin"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="mysql慢查询日志开启mysql 提供一种慢查询日志记录，用于记录响应时间超过阈值的SQL语句（默认是关闭的）。 1234567891011121314151617181920212223临时开启：mysql&gt; show variables  like &amp;#x27;%slow_query_log%&amp;#x27;;+---------------------+-----------------">
+<meta property="og:type" content="article">
+<meta property="og:title" content="慢查询分析">
+<meta property="og:url" content="http://kymlin.github.io/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Kymlin&#39;s Blog">
+<meta property="og:description" content="mysql慢查询日志开启mysql 提供一种慢查询日志记录，用于记录响应时间超过阈值的SQL语句（默认是关闭的）。 1234567891011121314151617181920212223临时开启：mysql&gt; show variables  like &amp;#x27;%slow_query_log%&amp;#x27;;+---------------------+-----------------">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg">
+<meta property="article:published_time" content="2021-11-30T11:30:58.129Z">
+<meta property="article:modified_time" content="2021-11-30T10:55:48.673Z">
+<meta property="article:author" content="Kymlin">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg"><link rel="shortcut icon" href="/img/avatar.jpg"><link rel="canonical" href="http://kymlin.github.io/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '慢查询分析',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-11-30 18:55:48'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" target="_blank" rel="noopener" href="https://music.163.com/#/outchain/0/547187496/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://movie.douban.com/top250"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Kymlin's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" target="_blank" rel="noopener" href="https://music.163.com/#/outchain/0/547187496/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" target="_blank" rel="noopener" href="https://movie.douban.com/top250"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">慢查询分析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-11-30T11:30:58.129Z" title="发表于 2021-11-30 19:30:58">2021-11-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-11-30T10:55:48.673Z" title="更新于 2021-11-30 18:55:48">2021-11-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/database/">database</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="慢查询分析"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h3 id="mysql慢查询日志开启"><a href="#mysql慢查询日志开启" class="headerlink" title="mysql慢查询日志开启"></a>mysql慢查询日志开启</h3><p>mysql 提供一种慢查询日志记录，用于记录响应时间超过阈值的SQL语句（默认是关闭的）。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">临时开启：</span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">show</span> variables  <span class="keyword">like</span> <span class="string">&#x27;%slow_query_log%&#x27;</span>;</span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="operator">|</span> Variable_name       <span class="operator">|</span> <span class="keyword">Value</span>                                         <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="operator">|</span> slow_query_log      <span class="operator">|</span> OFF                                           <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> slow_query_log_file <span class="operator">|</span> <span class="operator">/</span>home<span class="operator">/</span>WDPM<span class="operator">/</span>MysqlData<span class="operator">/</span>mysql<span class="operator">/</span>DB<span class="operator">-</span>Server<span class="operator">-</span>slow.log <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="number">2</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">set</span> <span class="keyword">global</span> slow_query_log<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line">Query OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.09</span> sec)</span><br><span class="line"></span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">show</span> variables <span class="keyword">like</span> <span class="string">&#x27;%slow_query_log%&#x27;</span>;</span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="operator">|</span> Variable_name       <span class="operator">|</span> <span class="keyword">Value</span>                                         <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="operator">|</span> slow_query_log      <span class="operator">|</span> <span class="keyword">ON</span>                                            <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> slow_query_log_file <span class="operator">|</span> <span class="operator">/</span>home<span class="operator">/</span>WDPM<span class="operator">/</span>MysqlData<span class="operator">/</span>mysql<span class="operator">/</span>DB<span class="operator">-</span>Server<span class="operator">-</span>slow.log <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">---------------------+-----------------------------------------------+</span></span><br><span class="line"><span class="number">2</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql<span class="operator">&gt;</span> </span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">永久开启,在my.cnf中加入配置：</span><br><span class="line">[mysqld]</span><br><span class="line">...</span><br><span class="line">slow_query_log=1</span><br><span class="line">long_query_time=3 设置阈值，单位秒</span><br><span class="line">slow_query_log_file=/var/lib/mysql/localhost_slow.log</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h3 id="排查慢查询"><a href="#排查慢查询" class="headerlink" title="排查慢查询"></a>排查慢查询</h3><h4 id="查询慢查询数量"><a href="#查询慢查询数量" class="headerlink" title="查询慢查询数量"></a>查询慢查询数量</h4><p>一般来说，每分钟慢查询在个位数是正常的，如果量比较大，就可能存在问题<br>慢查询的数量保存在mysql库里面的slow_log表。<br><code>select * from slow_log where start_time &gt; &#39;2021-11-01 00:00:00&#39;</code></p>
+<h4 id="查看当前进行的查询状态"><a href="#查看当前进行的查询状态" class="headerlink" title="查看当前进行的查询状态"></a>查看当前进行的查询状态</h4><p>查看当前系统的查询，可以试用show processlist,如果要做条件查询，则可以直接查询information_schema库里面的processlist表<br>查看当前所有process:<br><code>select * from information_schema.processlist</code><br>查看当前正在进行的查询并按照已经执行时间倒排<br><code>select * from information_schema.processlist where info is not null order by time desc </code><br>一般来讲，一条查询的执行速度很快，所以被我们抓到info不是null的数量不会太多，一般几条，如果一次查到info不是null的数量较多，可能就是系统出了问题。</p>
+<h4 id="问题定位与解决"><a href="#问题定位与解决" class="headerlink" title="问题定位与解决"></a>问题定位与解决</h4><p>当察觉系统变慢时，查询慢查询数量以及查看processlist，看慢查询数量是不是飙升，processlist中是不是很多lock状态，或者执行了很长时间的查询。为了尽快恢复系统的正常运行，直接kill掉那些lock和执行较长时间的查询，但这是临时的办法，我们还要找到慢查询的原因。<br><code>mysql&gt; kill id</code><br>在慢查询表里有几个比较重要的指标：</p>
+<ul>
+<li><strong>start_time</strong>  开始时间，通过这个参数配合系统出现问题的时间，定位是哪些查询造成的</li>
+<li><strong>query_time</strong>  查询时间</li>
+<li><strong>rows_sent</strong>   发送的结果数</li>
+<li><strong>rows_examined</strong> 查询扫过的行数，通过这个参数基本可以告诉我们，那个是大查询<br>在实际操作中，需要把row_examined较大的查询拿出来做优化，添加索引，修改语句等来彻底解决问题。</li>
+</ul>
+<h4 id="explain分析SQL执行状态"><a href="#explain分析SQL执行状态" class="headerlink" title="explain分析SQL执行状态"></a>explain分析SQL执行状态</h4><p>explain显示了mysql如何使用索引来处理select语句以及连接表。可以帮助选择更好的索引和写出更优化的查询语句。</p>
+<p>使用方法，在select语句前加上explain就可以了，例如下：</p>
+<p><code>explain select c.title, cc.content form comment_content cc, comment c where cc.id=c.id </code></p>
+<h5 id="explain列解释"><a href="#explain列解释" class="headerlink" title="explain列解释"></a>explain列解释</h5><ul>
+<li><p>table列：显示这一行的数据是关于哪张表的</p>
+</li>
+<li><p>type列：这是重要的列，显示连接使用了何种类型。从最好到最差的连接类型为const、eq_reg、ref、range、index和ALL</p>
+</li>
+<li><p>possible_keys 列：显示可能应用在这张表中的索引。如果为空，没有可能的索引。可以为相关的域从WHERE语句中选择一个合适的语句</p>
+</li>
+<li><p>key列：实际使用的索引。如果为NULL，则没有使用索引。很少的情况下，MYSQL会选择优化不足的索引。这种情况下，可以在SELECT语句 中使用USE INDEX（indexname）来强制使用一个索引或者用IGNORE INDEX（indexname）来强制MYSQL忽略索引</p>
+</li>
+<li><p>key_len列：使用的索引的长度。在不损失精确性的情况下，长度越短越好</p>
+</li>
+<li><p>ref列：显示索引的哪一列被使用了，如果可能的话，是一个常数</p>
+</li>
+<li><p>rows列：MYSQL认为必须检查的用来返回请求数据的行数</p>
+</li>
+<li><p>Extra列：关于MYSQL如何解析查询的额外信息。</p>
+</li>
+</ul>
+<h4 id="SQL优化建议"><a href="#SQL优化建议" class="headerlink" title="SQL优化建议"></a>SQL优化建议</h4><ul>
+<li>优化索引，最简单粗暴的办法，给查询语句添加复合索引，但不是最好的方式</li>
+<li>将大表拆成小的汇总表</li>
+<li>避免在大表上的group by，order by，offset 操作，除非你知道如何优化的前提下</li>
+<li>SQL WHERE查询条件，尽量按照添加的索引顺序来写</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:kymlin00@gmail.com">Kymlin</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kymlin.github.io/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/">http://kymlin.github.io/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kymlin.github.io" target="_blank">Kymlin's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/mysql/">mysql</a></div><div class="post_share"><div class="social-share" data-image="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/11/30/python/python%20print/"><img class="prev-cover" src="https://s3.bmp.ovh/imgs/2021/11/c60591c72c9f6533.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">print输出到文件</div></div></a></div><div class="next-post pull-right"><a href="/2021/11/30/python/wechat%E5%A4%9A%E5%BC%80/"><img class="next-cover" src="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">微信多开</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2021/11/23/database/%E7%BB%9F%E8%AE%A1%E5%B7%A5%E4%BD%9C%E6%97%A5%E6%95%B0%E6%8D%AE/" title="msyql中统计工作日数据"><img class="cover" src="https://s3.bmp.ovh/imgs/2021/11/8fdb0c7843241f4a.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-11-23</div><div class="title">msyql中统计工作日数据</div></div></a></div></div></div><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div><div id="comment-switch"><span class="first-comment">Valine</span><span class="switch-btn"></span><span class="second-comment">Disqus</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div><div><div id="disqus_thread"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Kymlin</div><div class="author-info__description"></div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/kymlin"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kymlin" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:kymlin00@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">Welcome to my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#mysql%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%BC%80%E5%90%AF"><span class="toc-number">1.</span> <span class="toc-text">mysql慢查询日志开启</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%92%E6%9F%A5%E6%85%A2%E6%9F%A5%E8%AF%A2"><span class="toc-number">2.</span> <span class="toc-text">排查慢查询</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%95%B0%E9%87%8F"><span class="toc-number">2.1.</span> <span class="toc-text">查询慢查询数量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E8%BF%9B%E8%A1%8C%E7%9A%84%E6%9F%A5%E8%AF%A2%E7%8A%B6%E6%80%81"><span class="toc-number">2.2.</span> <span class="toc-text">查看当前进行的查询状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D%E4%B8%8E%E8%A7%A3%E5%86%B3"><span class="toc-number">2.3.</span> <span class="toc-text">问题定位与解决</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#explain%E5%88%86%E6%9E%90SQL%E6%89%A7%E8%A1%8C%E7%8A%B6%E6%80%81"><span class="toc-number">2.4.</span> <span class="toc-text">explain分析SQL执行状态</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#explain%E5%88%97%E8%A7%A3%E9%87%8A"><span class="toc-number">2.4.1.</span> <span class="toc-text">explain列解释</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SQL%E4%BC%98%E5%8C%96%E5%BB%BA%E8%AE%AE"><span class="toc-number">2.5.</span> <span class="toc-text">SQL优化建议</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/11/30/python/python%20print/" title="print输出到文件"><img src="https://s3.bmp.ovh/imgs/2021/11/c60591c72c9f6533.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="print输出到文件"/></a><div class="content"><a class="title" href="/2021/11/30/python/python%20print/" title="print输出到文件">print输出到文件</a><time datetime="2021-11-30T11:31:34.422Z" title="发表于 2021-11-30 19:31:34">2021-11-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/" title="慢查询分析"><img src="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="慢查询分析"/></a><div class="content"><a class="title" href="/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/" title="慢查询分析">慢查询分析</a><time datetime="2021-11-30T11:30:58.129Z" title="发表于 2021-11-30 19:30:58">2021-11-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/11/30/python/wechat%E5%A4%9A%E5%BC%80/" title="微信多开"><img src="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="微信多开"/></a><div class="content"><a class="title" href="/2021/11/30/python/wechat%E5%A4%9A%E5%BC%80/" title="微信多开">微信多开</a><time datetime="2021-11-29T16:00:00.000Z" title="发表于 2021-11-30 00:00:00">2021-11-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/11/29/hexo/butterfly%E9%85%8D%E7%BD%AE%E8%83%8C%E6%99%AF%E9%9F%B3%E4%B9%90/" title="butterfly主题配置背景音乐"><img src="https://s3.bmp.ovh/imgs/2021/11/4f6cdbd86e0cc6cd.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="butterfly主题配置背景音乐"/></a><div class="content"><a class="title" href="/2021/11/29/hexo/butterfly%E9%85%8D%E7%BD%AE%E8%83%8C%E6%99%AF%E9%9F%B3%E4%B9%90/" title="butterfly主题配置背景音乐">butterfly主题配置背景音乐</a><time datetime="2021-11-28T16:00:00.000Z" title="发表于 2021-11-29 00:00:00">2021-11-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/11/23/linux/grep/" title="文本三剑客之grep"><img src="https://s3.bmp.ovh/imgs/2021/11/2b36f245e1a44e76.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="文本三剑客之grep"/></a><div class="content"><a class="title" href="/2021/11/23/linux/grep/" title="文本三剑客之grep">文本三剑客之grep</a><time datetime="2021-11-23T15:05:00.000Z" title="发表于 2021-11-23 23:05:00">2021-11-23</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By Kymlin</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: '',
+      appKey: '',
+      avatar: 'monsterid',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Valine' === 'Valine' || !true) {
+  if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script><script>function loadDisqus () {
+  var disqus_config = function () {
+    this.page.url = 'http://kymlin.github.io/2021/11/30/database/%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90/'
+    this.page.identifier = '2021/11/30/database/慢查询分析/'
+    this.page.title = '慢查询分析'
+  };
+
+  window.disqusReset = () => {
+    DISQUS.reset({
+      reload: true,
+      config: disqus_config
+    })
+  }
+
+  if (window.DISQUS) disqusReset()
+  else {
+    (function() { 
+      var d = document, s = d.createElement('script');
+      s.src = 'https://.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  }
+}
+
+if ('Valine' === 'Disqus' || !true) {
+  if (true) btf.loadComment(document.getElementById('disqus_thread'), loadDisqus)
+  else loadDisqus()
+} else {
+  function loadOtherComment () {
+    loadDisqus()
+  }
+}
+</script></div><div class="aplayer no-destroy" data-id="547187496" data-server="netease" data-type="playlist" data-fixed="true" data-mini="true" data-listFolded="false" data-order="random" data-preload="none" data-autoplay="true" data-volume="0.5" muted></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/gh/metowolf/MetingJS@1.2/dist/Meting.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
